@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="NpmPackChecker.WUI.MVVM.View.ShellView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NpmPackChecker.WUI.MVVM.View"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+        <!--<Grid x:Name="AppTitleBar"
+          Canvas.ZIndex="1"
+          Height="{Binding ElementName=NavView, Path=CompactPaneLength}"
+          IsHitTestVisible="True"
+          VerticalAlignment="Top">
+
+        <Image Source="/Assets/WindowCapture.ico"
+               HorizontalAlignment="Left"
+               Width="20"
+               Height="20" />
+
+        <TextBlock x:Name="AppTitleBarText"
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   VerticalAlignment="Center"
+                   Text="Window capture"
+                   TextWrapping="NoWrap"
+                   Margin="28,0,0,0"/>
+    </Grid>-->
+
+        <NavigationView 
+            x:Name="NavView"
+            Canvas.ZIndex="0"
+            IsBackButtonVisible="Collapsed" 
+            PaneDisplayMode="LeftCompact"
+            PaneTitle="Меню" 
+            IsSettingsVisible="True"
+            IsPaneToggleButtonVisible="True"
+            AlwaysShowHeader="False"
+            DisplayModeChanged ="NavView_DisplayModeChanged">
+
+            <!--<NavigationView.PaneFooter >
+                <StackPanel>
+                    <controls:FastCopyControl></controls:FastCopyControl>
+                </StackPanel>
+            </NavigationView.PaneFooter>-->
+
+            <NavigationView.MenuItems>
+
+                <NavigationViewItem Tag="NpmPackDep" Content="NPM зависимости" ToolTipService.ToolTip="NPM зависимости">
+                    <NavigationViewItem.Icon>
+                        <!--<ImageIcon Height="38" Width="70" Source="/Assets/Icons/NpmLogo.png"></ImageIcon>-->
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7B8;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+            </NavigationView.MenuItems>
+
+            <!--Margin="56,24,56,0" -->
+            <Grid Padding="0">
+
+                <InfoBar x:Name="PageInfoBar" Canvas.ZIndex="2" Margin="5" IsOpen="False" HorizontalAlignment="Right" />
+
+                <Frame x:Name="ContentFrame">
+
+                    <Frame.ContentTransitions>
+                        <TransitionCollection>
+                            <NavigationThemeTransition  />
+                        </TransitionCollection>
+                    </Frame.ContentTransitions>
+
+                </Frame>
+            </Grid>
+
+        </NavigationView>
+
+    </Grid>
+
+
+</Page>

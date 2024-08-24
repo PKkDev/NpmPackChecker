@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "NpmPackChecker.WUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "NpmPackChecker.WUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

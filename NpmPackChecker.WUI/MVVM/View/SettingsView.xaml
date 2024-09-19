@@ -19,7 +19,7 @@
 
             <Button Content="Хранилище" Command="{x:Bind ViewModel.OpenLocalStorage}"/>
 
-            <Button Content="Токен" Command="{x:Bind ViewModel.OpenTokenSettingsWeb}"/>
+            <Button Content="Токен" Command="{x:Bind ViewModel.OpenNPMWeb}"/>
 
         </StackPanel>
 
@@ -33,7 +33,7 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding ViewTitle}"/>
+                            <TextBlock Text="{Binding Title}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

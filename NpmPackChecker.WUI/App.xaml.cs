@@ -39,28 +39,11 @@ namespace NpmPackChecker.WUI
                     services.AddTransient<SettingsView>();
                     services.AddTransient<SettingsViewModel>();
 
-                    //services.AddTransient<BoardView>();
-                    //services.AddTransient<BoardViewModel>();
-
-                    //services.AddTransient<TaskCollView>();
-                    //services.AddTransient<TaskCollViewModel>();
-
-                    //services.AddTransient<MergReqView>();
-                    //services.AddTransient<MergReqViewModel>();
-
-                    //services.AddTransient<FavoriteTaskView>();
-                    //services.AddTransient<FavoriteTaskViewModel>();
-
                     services.AddTransient<NpmPackDepView>();
                     services.AddTransient<NpmPackDepViewModel>();
 
-                    //services.AddTransient<GroupProjectControlModel>();
-                    //services.AddTransient<FastCopyControlModel>();
-
                     services.AddSingleton<NavigationHelperService>();
-                    //services.AddTransient<GitLabService>();
                     services.AddSingleton<InfoBarService>();
-                    //services.AddSingleton<DataStorageService>();
                     services.AddSingleton<NpmRegService>();
 
                     services.AddHttpClient();

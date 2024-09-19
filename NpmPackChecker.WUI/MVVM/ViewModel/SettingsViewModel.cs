@@ -32,7 +32,7 @@ public class SettingsViewModel : ObservableRecipient
     //}
 
     public RelayCommand OpenLocalStorage { get; set; }
-    public RelayCommand OpenTokenSettingsWeb { get; set; }
+    public RelayCommand OpenNPMWeb { get; set; }
     public RelayCommand SaveBaseAppSettings { get; set; }
 
     public SettingsViewModel()
@@ -61,11 +61,7 @@ public class SettingsViewModel : ObservableRecipient
             //await _dataStorage.OpenFolder();
         });
 
-        OpenTokenSettingsWeb = new RelayCommand(async () =>
-        {
-            var url = "https://gitlabsvr.nsd.ru/gitlab/-/profile/personal_access_tokens";
-            await Windows.System.Launcher.LaunchUriAsync(new Uri(url));
-        });
+        OpenNPMWeb = new RelayCommand(async () => await Windows.System.Launcher.LaunchUriAsync(new Uri("https://www.npmjs.com/")));
 
         SaveBaseAppSettings = new RelayCommand(async () =>
         {

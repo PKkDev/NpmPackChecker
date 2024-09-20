@@ -10,12 +10,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using Windows.ApplicationModel;
 using Windows.Storage.Pickers;
-using WinRT;
-using static CommunityToolkit.Mvvm.ComponentModel.__Internals.__TaskExtensions.TaskAwaitableWithoutEndValidation;
 
 namespace NpmPackChecker.WUI.MVVM.ViewModel
 {
@@ -37,7 +33,15 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         //public string PacVersion { get => _pacVersion; set => SetProperty(ref _pacVersion, value); }
 
         private string _pacNameVersion;
-        public string PacNameVersion { get => _pacNameVersion; set => SetProperty(ref _pacNameVersion, value); }
+        public string PacNameVersion
+        {
+            get => _pacNameVersion;
+            set
+            {
+                SetProperty(ref _pacNameVersion, value);
+                OnAnalyze?.NotifyCanExecuteChanged();
+            }
+        }
 
         public RelayCommand OnLoadPackage { get; set; }
         public RelayCommand OnAnalyze { get; set; }
@@ -96,7 +100,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //PacNameVersion = "make-fetch-happen@9.1.0";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
 
-            DataSource = new(); 
+            DataSource = new();
             _tempoTotalDeps = new();
 
             //SavedChecks = new();
@@ -134,6 +138,10 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                                 PacNameVersion += depToCheck;
                         }
                     }
+                    else
+                    {
+                        _infoBarService.Show("Раздел dependencies не найден");
+                    }
 
                     var isDevDependencies = document.RootElement.TryGetProperty("devDependencies", out var devDependencies);
                     if (isDevDependencies)
@@ -149,7 +157,10 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                                 PacNameVersion += depToCheck;
                         }
                     }
-
+                    else
+                    {
+                        _infoBarService.Show("Раздел devDependencies не найден");
+                    }
                 }
             });
 
@@ -159,7 +170,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                 _dispatcherQueue.TryEnqueue(() => IsLoading = false);
                 await StartCheckDepsInRegistry();
-            });
+            },
+            () => !string.IsNullOrEmpty(PacNameVersion.Trim()));
 
             OnSave = new RelayCommand(async () =>
                 {
@@ -351,19 +363,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 var versionKeyesStr = string.Join(" || ", versions.Select(x => x.Key));
                 var totalVersions = SemVersionRange.ParseNpm(versionKeyesStr, false, versionKeyesStr.Length);
 
-                if (searchVersion == "1")
-                {
-                }
-                if (searchVersion == "^4.1.3")
-                {
-                }
-                if (searchVersion.IndexOf(">") != -1)
-                {
-                }
-                if (searchVersion.IndexOf("^") != -1 || searchVersion.IndexOf("~") != -1)
-                {
-                }
-
                 var isDone = SemVersionRange.TryParseNpm(searchVersion, false, out var prereleaseRange);
 
                 if (isDone)
@@ -381,7 +380,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                             if (isDoneLatest)
                             {
                                 var res = totalVersionsFilteredRange.Where(x => latest.Contains(x.Start)).ToList();
-                                if (res.Any())
+                                if (res.Count != 0)
                                 {
                                     resVersion = res.First().ToString();
                                 }
@@ -393,14 +392,14 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 }
                 else
                 {
-
+                    _infoBarService.Show($"версия '{searchVersion}' не найдена в спсике");
                 }
 
                 var isVersionFounded = versions.TryGetValue(mapVersion, out var needVersion2);
                 version = needVersion2;
                 return isVersionFounded;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 version = null;
                 return false;
@@ -409,14 +408,9 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         private async Task StartCheckDepsInRegistry()
         {
-            //if (DepNodeView == null) return;
-            //await CheckDepsInRegistry(DepNodeView);
-
             if (DataSource == null) return;
             foreach (var item in DataSource)
-            {
                 await CheckDepsInRegistry(item);
-            }
         }
         private async Task CheckDepsInRegistry(DepNodeView root)
         {
@@ -442,13 +436,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 foreach (var item in root.Dependencies)
                     await CheckDepsInRegistry(item);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                {
-                    root.SetState(DepStateType.Error);
-                    DepNodeCounterView.TotalError++;
-                    OnPropertyChanged(nameof(DepNodeCounterView));
-                }
+                root.SetState(DepStateType.Error);
+                DepNodeCounterView.TotalError++;
+                OnPropertyChanged(nameof(DepNodeCounterView));
             }
         }
 

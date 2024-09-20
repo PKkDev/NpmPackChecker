@@ -63,9 +63,9 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>-->
 
-                    <Button Content="Сохранить" Command="{x:Bind ViewModel.OnSave}"></Button>
+                    <Button Content="Сохранить" IsEnabled="False" Command="{x:Bind ViewModel.OnSave}"></Button>
 
-                    <Button Content="Удалить" Command="{x:Bind ViewModel.OnRemove}"></Button>
+                    <Button Content="Удалить" IsEnabled="False" Command="{x:Bind ViewModel.OnRemove}"></Button>
 
                 </StackPanel>
 

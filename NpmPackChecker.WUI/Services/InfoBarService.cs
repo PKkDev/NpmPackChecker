@@ -17,9 +17,16 @@ public class InfoBarService
     {
         if (_infoBar != null)
         {
-            _infoBar.Message = message;
-            _infoBar.Severity = severity;
-            _infoBar.IsOpen = true;
+            if (_infoBar.IsOpen == true)
+            {
+                _infoBar.Message += $"\r{message}";
+            }
+            else
+            {
+                _infoBar.Message = message;
+                _infoBar.Severity = severity;
+                _infoBar.IsOpen = true;
+            }
         }
     }
 }

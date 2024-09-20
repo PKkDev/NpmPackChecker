@@ -24,8 +24,8 @@ public class NpmRegService
     private HttpClient CreateClientRegistry()
     {
         var client = _factory.CreateClient();
-        //client.BaseAddress = new Uri("https://registry.npmjs.org/");
-        client.BaseAddress = new Uri("http://proxyp.dmzp.local/dmzart1/repository/npmjs/");
+        client.BaseAddress = new Uri("https://registry.npmjs.org/");
+        //client.BaseAddress = new Uri("http://proxyp.dmzp.local/dmzart1/repository/npmjs/");
         return client;
     }
     private HttpClient CreateClientDefault()

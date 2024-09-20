@@ -14,6 +14,12 @@ public class PackDetailDto
 
     [JsonPropertyName("time")]
     public Dictionary<string, DateTime> Time { get; set; }
+
+    public PackDetailDto()
+    {
+        Versions = new();
+        Time = new();
+    }
 }
 
 public class DistTagsDto
@@ -32,6 +38,11 @@ public class VersionDto
 
     [JsonPropertyName("dist")]
     public DistDto Dist { get; set; }
+
+    public VersionDto()
+    {
+        Dependencies = new(); 
+    }
 }
 
 public class DistDto

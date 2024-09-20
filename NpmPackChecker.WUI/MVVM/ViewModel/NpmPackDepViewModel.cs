@@ -7,9 +7,15 @@ using Semver;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.Storage.Pickers;
+using WinRT;
+using static CommunityToolkit.Mvvm.ComponentModel.__Internals.__TaskExtensions.TaskAwaitableWithoutEndValidation;
 
 namespace NpmPackChecker.WUI.MVVM.ViewModel
 {
@@ -33,6 +39,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         private string _pacNameVersion;
         public string PacNameVersion { get => _pacNameVersion; set => SetProperty(ref _pacNameVersion, value); }
 
+        public RelayCommand OnLoadPackage { get; set; }
         public RelayCommand OnAnalyze { get; set; }
 
         public RelayCommand OnSave { get; set; }
@@ -40,7 +47,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         public DepNodeView DepNodeView { get; set; }
         public ObservableCollection<DepNodeView> DataSource { get; set; }
-        private List<string> _already;
         private List<string> _tempoTotalDeps;
 
         //public ObservableCollection<SavedNpmChecks> SavedChecks { get; set; }
@@ -90,22 +96,72 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //PacNameVersion = "make-fetch-happen@9.1.0";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
 
-            DataSource = new();
-            _already = new();
+            DataSource = new(); 
             _tempoTotalDeps = new();
 
             //SavedChecks = new();
 
+            OnLoadPackage = new RelayCommand(async () =>
+            {
+                var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+                var window = App.MainWindow;
+                var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+                openPicker.ViewMode = PickerViewMode.Thumbnail;
+                openPicker.FileTypeFilter.Add(".json");
+
+                Windows.Storage.StorageFile file = await openPicker.PickSingleFileAsync();
+                if (file != null)
+                {
+                    var jsonString = File.ReadAllText(file.Path);
+
+                    PacNameVersion = "";
+
+                    using JsonDocument document = JsonDocument.Parse(jsonString);
+
+                    var isDependencies = document.RootElement.TryGetProperty("dependencies", out var dependencies);
+                    if (isDependencies)
+                    {
+                        using JsonDocument dependenciesDoc = JsonDocument.Parse(dependencies.Clone().ToString());
+                        foreach (JsonProperty property in dependenciesDoc.RootElement.EnumerateObject())
+                        {
+                            var pack = property.Name.ToString();
+                            var vers = property.Value.ToString();
+                            var depToCheck = $"{pack}@{vers}\r";
+
+                            if (!PacNameVersion.Contains(depToCheck))
+                                PacNameVersion += depToCheck;
+                        }
+                    }
+
+                    var isDevDependencies = document.RootElement.TryGetProperty("devDependencies", out var devDependencies);
+                    if (isDevDependencies)
+                    {
+                        using JsonDocument devDependenciesDoc = JsonDocument.Parse(dependencies.Clone().ToString());
+                        foreach (JsonProperty property in devDependenciesDoc.RootElement.EnumerateObject())
+                        {
+                            var pack = property.Name.ToString();
+                            var vers = property.Value.ToString();
+                            var depToCheck = $"{pack}@{vers}\r";
+
+                            if (!PacNameVersion.Contains(depToCheck))
+                                PacNameVersion += depToCheck;
+                        }
+                    }
+
+                }
+            });
+
             OnAnalyze = new RelayCommand(async () =>
             {
                 _dispatcherQueue.TryEnqueue(() => IsLoading = true);
-                await ViewDeps(PacNameVersion.Split("\r"));
+                await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                 _dispatcherQueue.TryEnqueue(() => IsLoading = false);
                 await StartCheckDepsInRegistry();
             });
 
-            OnSave = new RelayCommand(
-                async () =>
+            OnSave = new RelayCommand(async () =>
                 {
                     //if (DepNodeView == null) return;
 
@@ -120,8 +176,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 },
                 () => DepNodeView != null);
 
-            OnRemove = new RelayCommand(
-                async () =>
+            OnRemove = new RelayCommand(async () =>
                 {
                     //var find = SavedChecks
                     //    .FirstOrDefault(x =>
@@ -147,12 +202,13 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         private async Task ViewDeps(string[] arr)
         {
-            List<DepNodeView> deps = [];
+            List<DepNodeView> depsToCheck = [];
             foreach (string dep in arr)
             {
-                var arr2 = dep.Split("@");
-                if (arr2.Length == 2)
-                    deps.Add(new DepNodeView(arr2[0], arr2[1]));
+                var index = dep.LastIndexOf('@');
+                var pack = dep[..index];
+                var version = dep[(index + 1)..];
+                depsToCheck.Add(new DepNodeView(pack, version));
             }
 
             DepNodeCounterView = new();
@@ -161,9 +217,9 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             DataSource = new();
             OnPropertyChanged(nameof(DataSource));
 
-            foreach (var item in deps)
+            foreach (var item in depsToCheck)
             {
-                _already = new();
+                List<string> alreadyChecked = new();
                 _tempoTotalDeps = new();
 
                 DepNodeView = new(item.Title, item.DepVersion);
@@ -184,7 +240,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                 var isVersionFounded = GetAndCheckVersion(item.DepVersion, packInfo.Versions, packInfo.DistTags, out var needVersion);
 
-                _already.Add(DepNodeView.ViewTitle);
+                alreadyChecked.Add(DepNodeView.ViewTitle);
                 _tempoTotalDeps.Add(DepNodeView.Title);
 
                 if (isVersionFounded)
@@ -199,7 +255,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                     DataSource.Add(DepNodeView);
 
-                    await LoadDeps(DepNodeView, needVersion.Dependencies);
+                    await LoadDeps(DepNodeView, needVersion.Dependencies, alreadyChecked);
                 }
                 else
                 {
@@ -213,7 +269,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 OnSave.NotifyCanExecuteChanged();
             }
         }
-        private async Task LoadDeps(DepNodeView root, Dictionary<string, string> dependencies)
+        private async Task LoadDeps(
+            DepNodeView root, Dictionary<string, string> dependencies, List<string> alreadyChecked)
         {
             foreach (var item in dependencies)
             {
@@ -244,10 +301,10 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                         if (needVersion.Dependencies != null)
                         {
-                            if (_already.FirstOrDefault(x => x == chDep.ViewTitle) == null)
-                                await LoadDeps(chDep, needVersion.Dependencies);
+                            if (alreadyChecked.FirstOrDefault(x => x == chDep.ViewTitle) == null)
+                                await LoadDeps(chDep, needVersion.Dependencies, alreadyChecked);
 
-                            _already.Add(chDep.ViewTitle);
+                            alreadyChecked.Add(chDep.ViewTitle);
                         }
 
                         _tempoTotalDeps.Add(chDep.Title);

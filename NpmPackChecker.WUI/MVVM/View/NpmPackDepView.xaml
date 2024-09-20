@@ -15,28 +15,41 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"></RowDefinition>
-            <RowDefinition Height="auto"></RowDefinition>
-            <RowDefinition Height="auto"></RowDefinition>
-            <RowDefinition Height="auto"></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="150"></RowDefinition>
+            <RowDefinition></RowDefinition> 
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+        <Grid Grid.Row="0" ColumnSpacing="10">
 
-            <TextBox AcceptsReturn="True" TextWrapping="NoWrap" MaxHeight="50" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Text="{x:Bind ViewModel.PacNameVersion, Mode=TwoWay}" Width="320"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
 
-            <!--<TextBox Text="{x:Bind ViewModel.PacName, Mode=TwoWay}" Width="160"/>
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
 
-            <TextBox Text="{x:Bind ViewModel.PacVersion, Mode=TwoWay}" Width="160"/>-->
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="10">
 
-        </StackPanel>
+                <TextBox AcceptsReturn="True" TextWrapping="NoWrap" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Text="{x:Bind ViewModel.PacNameVersion, Mode=TwoWay}" Width="320"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <!--
+                <TextBox Text="{x:Bind ViewModel.PacName, Mode=TwoWay}" Width="160"/>
+                <TextBox Text="{x:Bind ViewModel.PacVersion, Mode=TwoWay}" Width="160"/>
+                -->
 
-            <Button Content="Проверить" Command="{x:Bind ViewModel.OnAnalyze}"></Button>
+            </StackPanel>
 
-            <!--<ComboBox 
+            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="10">
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+
+                    <Button Content="Package" Command="{x:Bind ViewModel.OnLoadPackage}"></Button>
+
+                    <Button Content="Проверить" Command="{x:Bind ViewModel.OnAnalyze}"></Button>
+
+                    <!--<ComboBox 
                 Header="Проверки"  
                 ItemsSource="{x:Bind ViewModel.SavedChecks}" 
                 SelectedItem="{x:Bind ViewModel.SelectedSavedChecks, Mode=TwoWay}" 
@@ -50,35 +63,49 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>-->
 
-            <Button Content="Сохранить" Command="{x:Bind ViewModel.OnSave}"></Button>
+                    <Button Content="Сохранить" Command="{x:Bind ViewModel.OnSave}"></Button>
 
-            <Button Content="Удалить" Command="{x:Bind ViewModel.OnRemove}"></Button>
+                    <Button Content="Удалить" Command="{x:Bind ViewModel.OnRemove}"></Button>
 
-        </StackPanel>
+                </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
 
-            <AutoSuggestBox 
+                    <AutoSuggestBox 
                 Header="Поиск"
                 PlaceholderText="Поиск"
                 QueryIcon="Accept"
                 Width="250" 
                 TextChanged="DepsSearchTextChanged"
                 SuggestionChosen="DepsSearchSuggestionChosen">
-            </AutoSuggestBox>
+                    </AutoSuggestBox>
 
-        </StackPanel>
+                </StackPanel>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
 
-            <TextBlock Text="{x:Bind ViewModel.DepNodeCounterView.ViewTitle, Mode=OneWay}"></TextBlock>
+                    <TextBlock Text="{x:Bind ViewModel.DepNodeCounterView.ViewTitle, Mode=OneWay}"></TextBlock>
 
-        </StackPanel>
+                </StackPanel>
 
-        <ProgressRing Grid.Row="4" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Margin="0,10,0,0" Foreground="Green" Width="50" Height="50" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"/>
+            </StackPanel>
 
-        <ScrollView Grid.Row="4"  >
-            <TreeView 
+        </Grid>
+
+        <Grid Grid.Row="1">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <ProgressRing Grid.Row="0" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Margin="0,10,0,0" Foreground="Green" Width="50" Height="50" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"/>
+
+            <ScrollView Grid.Row="0">
+                <TreeView 
                 x:Name="PackTreeView"
                 Margin="0 10 0 0" 
                 ItemsSource="{x:Bind ViewModel.DataSource, Mode=TwoWay}" 
@@ -87,49 +114,50 @@
                 CanDrag="False" 
                 CanDragItems="False">
 
-                <TreeView.ItemTemplate>
-                    <DataTemplate>
-                        <TreeViewItem 
+                    <TreeView.ItemTemplate>
+                        <DataTemplate>
+                            <TreeViewItem 
                             IsExpanded="True"
                             CanDrag="False"
                             AllowDrop="False"
                             ItemsSource="{Binding Dependencies, Mode=TwoWay}">
 
-                            <StackPanel Orientation="Horizontal" >
+                                <StackPanel Orientation="Horizontal" >
 
-                                <StackPanel.ContextFlyout>
-                                    <MenuFlyout>
-                                        <MenuFlyoutItem Text="Копировать" Command="{Binding  CopyTxtCmd}" CommandParameter="{Binding}" />
-                                    </MenuFlyout>
-                                </StackPanel.ContextFlyout>
+                                    <StackPanel.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Копировать" Command="{Binding  CopyTxtCmd}" CommandParameter="{Binding}" />
+                                        </MenuFlyout>
+                                    </StackPanel.ContextFlyout>
 
-                                <TextBlock 
+                                    <TextBlock 
                                     FontSize="14"
                                     VerticalAlignment="Center"
                                     Text="{Binding ViewTitle}" 
                                     Foreground="{Binding TextForeground, Mode=TwoWay}"
                                     ToolTipService.ToolTip="{Binding ToolTip, Mode=TwoWay}"/>
 
-                                <Button Padding="0" Margin="10,0,0,0">
+                                    <Button Padding="0" Margin="10,0,0,0">
 
-                                    <FontIcon 
+                                        <FontIcon 
                                         FontFamily="Segoe MDL2 Assets" 
                                         Glyph="{Binding StateIcon, Mode=TwoWay}"
                                         Foreground="{Binding StateIconColor, Mode=TwoWay}"
                                         ToolTipService.ToolTip="{Binding StateIconToolTip, Mode=TwoWay}">
-                                    </FontIcon>
+                                        </FontIcon>
 
-                                </Button>
+                                    </Button>
 
-                            </StackPanel>
+                                </StackPanel>
 
-                        </TreeViewItem>
-                    </DataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </ScrollView>
+                            </TreeViewItem>
+                        </DataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </ScrollView>
+
+        </Grid>
 
     </Grid>
-
 
 </Page>

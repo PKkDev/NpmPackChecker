@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 
 namespace NpmPackChecker.WUI.MVVM.ViewModel
 {
@@ -23,11 +24,14 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         private bool _isLoading;
         public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
-        private string _pacName;
-        public string PacName { get => _pacName; set => SetProperty(ref _pacName, value); }
+        //private string _pacName;
+        //public string PacName { get => _pacName; set => SetProperty(ref _pacName, value); }
 
-        private string _pacVersion;
-        public string PacVersion { get => _pacVersion; set => SetProperty(ref _pacVersion, value); }
+        //private string _pacVersion;
+        //public string PacVersion { get => _pacVersion; set => SetProperty(ref _pacVersion, value); }
+
+        private string _pacNameVersion;
+        public string PacNameVersion { get => _pacNameVersion; set => SetProperty(ref _pacNameVersion, value); }
 
         public RelayCommand OnAnalyze { get; set; }
 
@@ -79,8 +83,12 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //PacVersion = "12.1.4";
             //PacName = "bl";
             //PacVersion = "4.1.0";
-            PacName = "make-fetch-happen";
-            PacVersion = "9.1.0";
+            //PacName = "make-fetch-happen";
+            //PacVersion = "9.1.0";
+
+            //PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
+            //PacNameVersion = "make-fetch-happen@9.1.0";
+            PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
 
             DataSource = new();
             _already = new();
@@ -91,7 +99,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             OnAnalyze = new RelayCommand(async () =>
             {
                 _dispatcherQueue.TryEnqueue(() => IsLoading = true);
-                await ViewDeps();
+                await ViewDeps(PacNameVersion.Split("\r"));
                 _dispatcherQueue.TryEnqueue(() => IsLoading = false);
                 await StartCheckDepsInRegistry();
             });
@@ -137,62 +145,73 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         }
 
-        private async Task ViewDeps()
+        private async Task ViewDeps(string[] arr)
         {
+            List<DepNodeView> deps = [];
+            foreach (string dep in arr)
+            {
+                var arr2 = dep.Split("@");
+                if (arr2.Length == 2)
+                    deps.Add(new DepNodeView(arr2[0], arr2[1]));
+            }
+
             DepNodeCounterView = new();
             OnPropertyChanged(nameof(DepNodeCounterView));
-
-            _already = new();
-            _tempoTotalDeps = new();
 
             DataSource = new();
             OnPropertyChanged(nameof(DataSource));
 
-            DepNodeView = new(PacName, PacVersion);
-
-            var packInfo = await _npmRegService.GetPackInfoBase(PacName);
-            if (packInfo == null)
+            foreach (var item in deps)
             {
-                packInfo = await _npmRegService.GetPackInfoBase(PacName, NpmChekType.Default);
-                DepNodeView.FromDefault = true;
-                DepNodeView.State = DepStateType.NotFounded;
+                _already = new();
+                _tempoTotalDeps = new();
+
+                DepNodeView = new(item.Title, item.DepVersion);
+
+                var packInfo = await _npmRegService.GetPackInfoBase(item.Title);
+                if (packInfo == null)
+                {
+                    packInfo = await _npmRegService.GetPackInfoBase(item.Title, NpmChekType.Default);
+                    DepNodeView.FromDefault = true;
+                    DepNodeView.State = DepStateType.NotFounded;
+                }
+
+                if (packInfo == null)
+                {
+                    _infoBarService.Show($"Пакет '{item.Title}' не найден");
+                    return;
+                }
+
+                var isVersionFounded = GetAndCheckVersion(item.DepVersion, packInfo.Versions, packInfo.DistTags, out var needVersion);
+
+                _already.Add(DepNodeView.ViewTitle);
+                _tempoTotalDeps.Add(DepNodeView.Title);
+
+                if (isVersionFounded)
+                {
+                    DepNodeView.TrueVersion = needVersion.Version;
+                    packInfo.Time.TryGetValue(needVersion.Version, out var trueVersionDate);
+                    DepNodeView.TrueVersionDate = trueVersionDate;
+                    DepNodeView.TarballUrl = needVersion.Dist.Tarball;
+
+                    DepNodeCounterView.TotalDeps++;
+                    OnPropertyChanged(nameof(DepNodeCounterView));
+
+                    DataSource.Add(DepNodeView);
+
+                    await LoadDeps(DepNodeView, needVersion.Dependencies);
+                }
+                else
+                {
+                    DepNodeView.State = DepStateType.Error;
+                    DepNodeCounterView.TotalError++;
+                    OnPropertyChanged(nameof(DepNodeCounterView));
+                    _infoBarService.Show($"Версия '{item.DepVersion}' не найдена");
+                }
+
+                DepNodeView.TotalDeps = _tempoTotalDeps.Distinct().ToList();
+                OnSave.NotifyCanExecuteChanged();
             }
-
-            if (packInfo == null)
-            {
-                _infoBarService.Show($"Пакет '{PacName}' не найден");
-                return;
-            }
-
-            var isVersionFounded = GetAndCheckVersion(PacVersion, packInfo.Versions, packInfo.DistTags, out var needVersion);
-
-            _already.Add(DepNodeView.ViewTitle);
-            _tempoTotalDeps.Add(DepNodeView.Title);
-
-            if (isVersionFounded)
-            {
-                DepNodeView.TrueVersion = needVersion.Version;
-                packInfo.Time.TryGetValue(needVersion.Version, out var trueVersionDate);
-                DepNodeView.TrueVersionDate = trueVersionDate;
-                DepNodeView.TarballUrl = needVersion.Dist.Tarball;
-
-                DepNodeCounterView.TotalDeps++;
-                OnPropertyChanged(nameof(DepNodeCounterView));
-
-                DataSource.Add(DepNodeView);
-
-                await LoadDeps(DepNodeView, needVersion.Dependencies);
-            }
-            else
-            {
-                DepNodeView.State = DepStateType.Error;
-                DepNodeCounterView.TotalError++;
-                OnPropertyChanged(nameof(DepNodeCounterView));
-                _infoBarService.Show($"Версия '{PacVersion}' не найдена");
-            }
-
-            DepNodeView.TotalDeps = _tempoTotalDeps.Distinct().ToList();
-            OnSave.NotifyCanExecuteChanged();
         }
         private async Task LoadDeps(DepNodeView root, Dictionary<string, string> dependencies)
         {
@@ -333,8 +352,14 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         private async Task StartCheckDepsInRegistry()
         {
-            if (DepNodeView == null) return;
-            await CheckDepsInRegistry(DepNodeView);
+            //if (DepNodeView == null) return;
+            //await CheckDepsInRegistry(DepNodeView);
+
+            if (DataSource == null) return;
+            foreach (var item in DataSource)
+            {
+                await CheckDepsInRegistry(item);
+            }
         }
         private async Task CheckDepsInRegistry(DepNodeView root)
         {

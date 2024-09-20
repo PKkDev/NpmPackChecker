@@ -1,8 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Windows.Input;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace NpmPackChecker.WUI.MVVM.Model;
 
@@ -23,6 +27,9 @@ public class DepNodeView : ObservableObject
     public List<string> TotalDeps { get; set; }
 
     public DepStateType State { get; set; }
+
+    [NotMapped]
+    public ICommand CopyTxtCmd { get; set; }
 
     public string ToolTip
     {
@@ -115,6 +122,15 @@ public class DepNodeView : ObservableObject
         Dependencies = new();
         TotalDeps = new();
         State = DepStateType.Pending;
+
+        CopyTxtCmd = new RelayCommand<DepNodeView>((DepNodeView param)
+            =>
+            {
+                DataPackage dataPackage = new();
+                dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                dataPackage.SetText($"{Title}@{TrueVersion} {TrueVersionDate:yyyy-MM-dd}");
+                Clipboard.SetContent(dataPackage); ;
+            });
     }
 
     public DepNodeView(string title, string version)

@@ -16,30 +16,21 @@ public class NpmRegService
 {
     private readonly IHttpClientFactory _factory;
 
-    //private readonly BaseAppSettings _bas;
-
-    public NpmRegService(IHttpClientFactory factory)//, DataStorageService dataStorage
+    public NpmRegService(IHttpClientFactory factory)
     {
         _factory = factory;
-
-        //_bas = dataStorage.GetByKey<BaseAppSettings>("BaseAppSettings");
     }
 
-    private HttpClient CreateClient()
+    private HttpClient CreateClientRegistry()
     {
         var client = _factory.CreateClient();
-
-        //_bas.NpmRegistry = "https://registry.npmjs.org/";
-        //_bas.NpmRegistry = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
-
         client.BaseAddress = new Uri("https://registry.npmjs.org/");
-
+        //client.BaseAddress = new Uri("http://proxyp.dmzp.local/dmzart1/repository/npmjs/");
         return client;
     }
     private HttpClient CreateClientDefault()
     {
         var client = _factory.CreateClient();
-        //_bas.NpmRegistry = "https://registry.npmjs.org/";
         client.BaseAddress = new Uri("https://registry.npmjs.org/");
         return client;
     }
@@ -48,7 +39,7 @@ public class NpmRegService
     {
         try
         {
-            var cl = type == NpmChekType.Default ? CreateClientDefault() : CreateClient();
+            var cl = type == NpmChekType.Default ? CreateClientDefault() : CreateClientRegistry();
 
             HttpRequestMessage request = new(HttpMethod.Get, $"{packName}");
 
@@ -65,50 +56,6 @@ public class NpmRegService
             return null;
         }
     }
-
-    //public async Task<PackDetailDto?> GetPackInfo(string packName)
-    //{
-    //    try
-    //    {
-    //        var checks = new List<string>() { "string_decoder", "readable-stream", "ieee754" };
-    //        if (checks.Contains(packName))
-    //            return null;
-
-    //        var cl = CreateClient();
-
-    //        var url = $"{packName}";
-
-    //        HttpRequestMessage request = new(HttpMethod.Get, url);
-
-    //        var response = await cl.SendAsync(request);
-    //        var contentStr = await response.Content.ReadAsStringAsync();
-
-    //        if (!response.IsSuccessStatusCode)
-    //            return null;
-
-    //        return JsonSerializer.Deserialize<PackDetailDto>(contentStr);
-    //    }
-    //    catch (Exception)
-    //    {
-    //        return null;
-    //    }
-    //}
-    //public async Task<PackDetailDto?> GetPackInfoDefault(string packName)
-    //{
-    //    var cl = CreateClientDefault();
-
-    //    var url = $"{packName}";
-
-    //    HttpRequestMessage request = new(HttpMethod.Get, url);
-
-    //    var response = await cl.SendAsync(request);
-    //    var contentStr = await response.Content.ReadAsStringAsync();
-
-    //    if (!response.IsSuccessStatusCode)
-    //        return null;
-
-    //    return JsonSerializer.Deserialize<PackDetailDto>(contentStr);
-    //}
 
     public async Task<bool> CheckPackage(string tarballUrl)
     {

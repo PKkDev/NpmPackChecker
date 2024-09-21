@@ -26,12 +26,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         private bool _isLoading;
         public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
-        //private string _pacName;
-        //public string PacName { get => _pacName; set => SetProperty(ref _pacName, value); }
-
-        //private string _pacVersion;
-        //public string PacVersion { get => _pacVersion; set => SetProperty(ref _pacVersion, value); }
-
         private string _pacNameVersion;
         public string PacNameVersion
         {
@@ -88,7 +82,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _infoBarService = infoBarService;
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
-              
+
             //PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             //PacNameVersion = "make-fetch-happen@9.1.0";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
@@ -139,7 +133,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     var isDevDependencies = document.RootElement.TryGetProperty("devDependencies", out var devDependencies);
                     if (isDevDependencies)
                     {
-                        using JsonDocument devDependenciesDoc = JsonDocument.Parse(dependencies.Clone().ToString());
+                        using JsonDocument devDependenciesDoc = JsonDocument.Parse(devDependencies.Clone().ToString());
                         foreach (JsonProperty property in devDependenciesDoc.RootElement.EnumerateObject())
                         {
                             var pack = property.Name.ToString();

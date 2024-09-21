@@ -67,6 +67,8 @@
 
                     <Button Content="Удалить" IsEnabled="False" Command="{x:Bind ViewModel.OnRemove}"></Button>
 
+                    <TextBox Text="{x:Bind ViewModel.RegistryUrl, Mode=TwoWay}" Width="160"/>
+
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">

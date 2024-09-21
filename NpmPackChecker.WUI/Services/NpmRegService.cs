@@ -15,17 +15,22 @@ public enum NpmChekType
 public class NpmRegService
 {
     private readonly IHttpClientFactory _factory;
+    private string _registryUrl;
 
     public NpmRegService(IHttpClientFactory factory)
     {
         _factory = factory;
     }
 
+    public void SetRegistryUrl(string registryUrl)
+    {
+        _registryUrl = registryUrl;
+    }
+
     private HttpClient CreateClientRegistry()
     {
         var client = _factory.CreateClient();
-        client.BaseAddress = new Uri("https://registry.npmjs.org/");
-        //client.BaseAddress = new Uri("http://proxyp.dmzp.local/dmzart1/repository/npmjs/");
+        client.BaseAddress = new Uri(_registryUrl);
         return client;
     }
     private HttpClient CreateClientDefault()

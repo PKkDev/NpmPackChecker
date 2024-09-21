@@ -26,6 +26,9 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         private bool _isLoading;
         public bool IsLoading { get => _isLoading; set => SetProperty(ref _isLoading, value); }
 
+        private string _registryUrl;
+        public string RegistryUrl { get => _registryUrl; set => SetProperty(ref _registryUrl, value); }
+
         private string _pacNameVersion;
         public string PacNameVersion
         {
@@ -85,6 +88,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _infoBarService = infoBarService;
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
+
+            RegistryUrl = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
+            //RegistryUrl = "https://registry.npmjs.org/";
+
+            _npmRegService.SetRegistryUrl(RegistryUrl);
 
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
@@ -287,12 +295,12 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 // обрабокта пакетов типа 'string-width-cjs': 'npm:string-width@^4.2.0'
                 if (pack.Contains("-cjs") && version.StartsWith("npm:") && version.Contains("@"))
                 {
-                    //var index1 = version.LastIndexOf('@');
-                    //var pack1 = version.Substring(4, index1 - 4);
-                    //var version1 = version[(index1 + 1)..];
+                    var index1 = version.LastIndexOf('@');
+                    var pack1 = version.Substring(4, index1 - 4);
+                    var version1 = version[(index1 + 1)..];
 
-                    //pack = pack1;
-                    //version = version1;
+                    pack = pack1;
+                    version = version1;
                 }
 
                 var chDep = new DepNodeView(pack, version, root);

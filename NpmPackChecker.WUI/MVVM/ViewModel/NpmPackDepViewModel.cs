@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
@@ -86,6 +87,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             //PacNameVersion = "make-fetch-happen@9.1.0";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
+            PacNameVersion = "@isaacs/cliui@8.0.2";
 
             DataSource = new();
             _tempoTotalDeps = new();
@@ -237,7 +239,9 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     return;
                 }
 
-                var isVersionFounded = GetAndCheckVersion(item.DepVersion, packInfo.Versions, packInfo.DistTags, out var needVersion);
+                var isVersionFounded = GetAndCheckVersion(
+                    item.DepVersion, packInfo.Versions, packInfo.DistTags,
+                    out var needVersion);
 
                 alreadyChecked.Add(DepNodeView.ViewTitle);
                 _tempoTotalDeps.Add(DepNodeView.Title);
@@ -273,20 +277,38 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         {
             foreach (var item in dependencies)
             {
-                var chDep = new DepNodeView(item.Key, item.Value, root);
+                var pack = item.Key;
+                var version = item.Value;
 
-                var packInfo = await _npmRegService.GetPackInfoBase(item.Key);
+                if (pack.Contains("-cjs") && version.StartsWith("npm:") && version.Contains("@"))
+                {
+                    var index1 = version.LastIndexOf('@');
+                    var pack1 = version.Substring(4, index1 - 4);
+                    var version1 = version[(index1 + 1)..];
+
+                    pack = pack1;
+                    version = version1;
+
+                }
+
+                var chDep = new DepNodeView(pack, version, root);
+
+
+
+                var packInfo = await _npmRegService.GetPackInfoBase(pack);
 
                 if (packInfo == null)
                 {
-                    packInfo = await _npmRegService.GetPackInfoBase(item.Key, NpmChekType.Default);
+                    packInfo = await _npmRegService.GetPackInfoBase(pack, NpmChekType.Default);
                     chDep.FromDefault = true;
                     chDep.State = DepStateType.NotFounded;
                 }
 
                 if (packInfo != null)
                 {
-                    var isVersionFounded = GetAndCheckVersion(item.Value, packInfo.Versions, packInfo.DistTags, out var needVersion);
+                    var isVersionFounded = GetAndCheckVersion(
+                        version, packInfo.Versions, packInfo.DistTags,
+                        out var needVersion);
 
                     if (isVersionFounded)
                     {

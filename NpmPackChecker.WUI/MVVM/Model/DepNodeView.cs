@@ -24,7 +24,7 @@ public class DepNodeView : ObservableObject
     public bool FromDefault { get; set; }
     public string TextForeground { get => FromDefault == true ? "Red" : null; }
 
-    public List<string> TotalDeps { get; set; }
+    //public List<string> TotalDeps { get; set; }
 
     public DepStateType State { get; set; }
 
@@ -120,7 +120,7 @@ public class DepNodeView : ObservableObject
     public DepNodeView()
     {
         Dependencies = new();
-        TotalDeps = new();
+        //TotalDeps = new();
         State = DepStateType.Pending;
 
         CopyTxtCmd = new RelayCommand<DepNodeView>((DepNodeView param)

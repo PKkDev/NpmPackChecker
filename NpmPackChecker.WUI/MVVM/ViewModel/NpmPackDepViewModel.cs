@@ -49,7 +49,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         //public DepNodeView DepNodeView { get; set; }
         public ObservableCollection<DepNodeView> DataSource { get; set; }
         private List<DepNodeView> DataSourceOrig { get; set; }
-        private List<string> _tempoTotalDeps;
+        public List<string> TotalDeps;
 
         //public ObservableCollection<SavedNpmChecks> SavedChecks { get; set; }
         //private SavedNpmChecks _selectedSavedChecks;
@@ -93,7 +93,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             PacNameVersion = "@isaacs/cliui@8.0.2";
 
             DataSource = new();
-            _tempoTotalDeps = new();
+            TotalDeps = new();
 
             //SavedChecks = new();
 
@@ -225,10 +225,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             DataSource = new();
             OnPropertyChanged(nameof(DataSource));
 
+            TotalDeps = new();
+
             foreach (var item in depsToCheck)
             {
                 List<string> alreadyChecked = new();
-                _tempoTotalDeps = new();
 
                 var DepNodeView = new DepNodeView(item.Title, item.DepVersion);
 
@@ -251,7 +252,9 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     out var needVersion);
 
                 alreadyChecked.Add(DepNodeView.ViewTitle);
-                _tempoTotalDeps.Add(DepNodeView.Title);
+
+                if (!TotalDeps.Any(x => x == DepNodeView.Title))
+                    TotalDeps.Add(DepNodeView.Title);
 
                 if (isVersionFounded)
                 {
@@ -275,7 +278,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     _infoBarService.Show($"Версия '{item.DepVersion}' не найдена");
                 }
 
-                DepNodeView.TotalDeps = _tempoTotalDeps.Distinct().ToList();
+                //DepNodeView.TotalDeps = _tempoTotalDeps.Distinct().ToList();
                 OnSave.NotifyCanExecuteChanged();
             }
         }
@@ -333,7 +336,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                             alreadyChecked.Add(chDep.ViewTitle);
                         }
 
-                        _tempoTotalDeps.Add(chDep.Title);
+                        if (!TotalDeps.Any(x => x == chDep.Title))
+                            TotalDeps.Add(chDep.Title);
                     }
                     else
                     {
@@ -362,7 +366,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         }
 
         private bool GetAndCheckVersion(
-            string searchVersion, Dictionary<string, VersionDto> versions, DistTagsDto distTags, out VersionDto? version)
+            string searchVersion, Dictionary<string, VersionDto> versions, DistTagsDto distTags, out VersionDto version)
         {
             try
             {
@@ -462,7 +466,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         {
             if (string.IsNullOrEmpty(searchText))
             {
-                if (DataSourceOrig.Any())
+                if (DataSourceOrig.Count != 0)
                 {
                     DataSource = [.. DataSourceOrig];
                     OnPropertyChanged(nameof(DataSource));

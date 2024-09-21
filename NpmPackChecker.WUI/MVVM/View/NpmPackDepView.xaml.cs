@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 using NpmPackChecker.WUI.MVVM.ViewModel;
+using System;
 using System.Linq;
 
 namespace NpmPackChecker.WUI.MVVM.View
@@ -26,8 +27,8 @@ namespace NpmPackChecker.WUI.MVVM.View
                     ViewModel.FilterTree("");
                 }
 
-                //var res = ViewModel.DepNodeView.TotalDeps.Where(x => x.ToLower().Contains(text));
-                //sender.ItemsSource = res;
+                var res = ViewModel.TotalDeps.Where(x => x.Contains(text, StringComparison.CurrentCultureIgnoreCase));
+                sender.ItemsSource = res;
             }
         }
 

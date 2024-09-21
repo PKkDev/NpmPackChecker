@@ -11,6 +11,7 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
 
     <!--Сборка в .exe  relaes + unpackage-->
     <!--<WindowsPackageType>None</WindowsPackageType>
@@ -19,13 +20,13 @@
     <!--<PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
-    
+
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="Assets\SplashScreen.scale-100.png" />
     <Content Remove="Assets\SplashScreen.scale-400.png" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove="MVVM\View\NpmPackDepView.xaml" />
     <None Remove="MVVM\View\SettingsView.xaml" />
@@ -39,6 +40,7 @@
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Icon.ico" />
   </ItemGroup>
 
   <ItemGroup>

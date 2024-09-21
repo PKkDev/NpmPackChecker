@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.Intrinsics.Arm;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
@@ -87,8 +86,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
 
-            //PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
-            //PacNameVersion = "make-fetch-happen@9.1.0";
+            PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
             PacNameVersion = "@isaacs/cliui@8.0.2";
 
@@ -99,7 +97,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
             OnLoadPackage = new RelayCommand(async () =>
             {
-                var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+                var openPicker = new FileOpenPicker();
                 var window = App.MainWindow;
                 var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
                 WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
@@ -131,9 +129,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         }
                     }
                     else
-                    {
                         _infoBarService.Show("Раздел dependencies не найден");
-                    }
 
                     var isDevDependencies = document.RootElement.TryGetProperty("devDependencies", out var devDependencies);
                     if (isDevDependencies)
@@ -150,20 +146,19 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         }
                     }
                     else
-                    {
                         _infoBarService.Show("Раздел devDependencies не найден");
-                    }
                 }
             });
 
-            OnAnalyze = new RelayCommand(async () =>
-            {
-                _dispatcherQueue.TryEnqueue(() => IsLoading = true);
-                await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
-                _dispatcherQueue.TryEnqueue(() => IsLoading = false);
-                await StartCheckDepsInRegistry();
-            },
-            () => !string.IsNullOrEmpty(PacNameVersion.Trim()));
+            OnAnalyze = new RelayCommand(
+                async () =>
+                {
+                    _dispatcherQueue.TryEnqueue(() => IsLoading = true);
+                    await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
+                    _dispatcherQueue.TryEnqueue(() => IsLoading = false);
+                    await StartCheckDepsInRegistry();
+                },
+                () => !string.IsNullOrEmpty(PacNameVersion.Trim()));
 
             OnSave = new RelayCommand(async () =>
                 {
@@ -205,7 +200,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //    if (saved != null)
             //        SavedChecks = new(saved);
             //});
-
         }
 
         private async Task ViewDeps(string[] arr)
@@ -344,7 +338,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         chDep.State = DepStateType.Error;
                         DepNodeCounterView.TotalError++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
-                        //_infoBarService.Show($"Версия '{PacVersion}' не найдена");
                     }
                 }
                 else
@@ -352,7 +345,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     chDep.State = DepStateType.Error;
                     DepNodeCounterView.TotalError++;
                     OnPropertyChanged(nameof(DepNodeCounterView));
-                    //_infoBarService.Show($"Пакет '{item.Key}' не найден");
+                    _infoBarService.Show($"Пакет '{pack}' не найден");
                 }
 
                 root.Dependencies.Add(chDep);

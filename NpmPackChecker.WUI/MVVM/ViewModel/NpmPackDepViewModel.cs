@@ -455,6 +455,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             }
         }
 
+        #region Filters
+
         public void FilterTree(string searchText)
         {
             if (string.IsNullOrEmpty(searchText))
@@ -492,7 +494,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             return new(dep.Where(x => x.ViewTitle.Contains(SearchText) || x.Dependencies.Any()));
         }
 
-
         public void FilterTreeByStatus(params DepStateType[] status)
         {
             if (DataSource == null) return;
@@ -518,5 +519,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 item.Dependencies = FilterTreByStatuseCycle(item.Dependencies, status);
             return new(dep.Where(x => status.Contains(x.State) || x.Dependencies.Any()));
         }
+
+        #endregion Filters
     }
 }

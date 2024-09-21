@@ -44,8 +44,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         public RelayCommand OnSave { get; set; }
         public RelayCommand OnRemove { get; set; }
 
-        public DepNodeView DepNodeView { get; set; }
+        public RelayCommand OnFilterByError { get; set; }
+
+        //public DepNodeView DepNodeView { get; set; }
         public ObservableCollection<DepNodeView> DataSource { get; set; }
+        private List<DepNodeView> DataSourceOrig { get; set; }
         private List<string> _tempoTotalDeps;
 
         //public ObservableCollection<SavedNpmChecks> SavedChecks { get; set; }
@@ -174,8 +177,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                     //SavedChecks.Add(savedNpmChecks);
                     //await dataStorage.SetByKey(SavedChecks, nameof(SavedNpmChecks), true);
-                },
-                () => DepNodeView != null);
+                }); // () => DepNodeView != null)
 
             OnRemove = new RelayCommand(async () =>
                 {
@@ -191,6 +193,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     //OnSave.NotifyCanExecuteChanged();
                     //OnRemove.NotifyCanExecuteChanged();
                 }); // () => SelectedSavedChecks != null
+
+            OnFilterByError = new RelayCommand(() =>
+            {
+                FilterTreeByStatus(DepStateType.Error | DepStateType.NotFounded);
+            });
 
             //Task.Run(() =>
             //{
@@ -223,7 +230,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 List<string> alreadyChecked = new();
                 _tempoTotalDeps = new();
 
-                DepNodeView = new(item.Title, item.DepVersion);
+                var DepNodeView = new DepNodeView(item.Title, item.DepVersion);
 
                 var packInfo = await _npmRegService.GetPackInfoBase(item.Title);
                 if (packInfo == null)
@@ -280,20 +287,18 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 var pack = item.Key;
                 var version = item.Value;
 
+                // обрабокта пакетов типа 'string-width-cjs': 'npm:string-width@^4.2.0'
                 if (pack.Contains("-cjs") && version.StartsWith("npm:") && version.Contains("@"))
                 {
-                    var index1 = version.LastIndexOf('@');
-                    var pack1 = version.Substring(4, index1 - 4);
-                    var version1 = version[(index1 + 1)..];
+                    //var index1 = version.LastIndexOf('@');
+                    //var pack1 = version.Substring(4, index1 - 4);
+                    //var version1 = version[(index1 + 1)..];
 
-                    pack = pack1;
-                    version = version1;
-
+                    //pack = pack1;
+                    //version = version1;
                 }
 
                 var chDep = new DepNodeView(pack, version, root);
-
-
 
                 var packInfo = await _npmRegService.GetPackInfoBase(pack);
 
@@ -455,23 +460,66 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         public void FilterTree(string searchText)
         {
-            if (!string.IsNullOrEmpty(searchText.Trim()) && searchText.Length >= 3) { }
+            if (string.IsNullOrEmpty(searchText))
+            {
+                if (DataSourceOrig.Any())
+                {
+                    DataSource = [.. DataSourceOrig];
+                    OnPropertyChanged(nameof(DataSource));
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(searchText.Trim()) && searchText.Length >= 3) { }
 
-            if (DepNodeView == null) return;
+                DataSourceOrig = [.. DataSource];
 
-            var clone = DepNodeView.Clone();
+                List<DepNodeView> dataSourceClone = new();
 
-            if (!string.IsNullOrEmpty(searchText.Trim()))
-                clone.Dependencies = FilterTreeCycle(clone.Dependencies, searchText);
+                foreach (var item in DataSource)
+                {
+                    var clone = item.Clone();
+                    clone.Dependencies = FilterTreeCycle(clone.Dependencies, searchText);
 
-            DataSource.RemoveAt(0);
-            DataSource.Add(clone);
+                    dataSourceClone.Add(clone);
+                }
+
+                DataSource = [.. dataSourceClone];
+                OnPropertyChanged(nameof(DataSource));
+            }
         }
         private ObservableCollection<DepNodeView> FilterTreeCycle(ObservableCollection<DepNodeView> dep, string SearchText)
         {
             foreach (var item in dep)
                 item.Dependencies = FilterTreeCycle(item.Dependencies, SearchText);
             return new(dep.Where(x => x.ViewTitle.Contains(SearchText) || x.Dependencies.Any()));
+        }
+
+
+        public void FilterTreeByStatus(params DepStateType[] status)
+        {
+            if (DataSource == null) return;
+
+            DataSourceOrig = [.. DataSource];
+
+            List<DepNodeView> dataSourceClone = new();
+
+            foreach (var item in DataSource)
+            {
+                var clone = item.Clone();
+                clone.Dependencies = FilterTreByStatuseCycle(clone.Dependencies, status);
+
+                dataSourceClone.Add(clone);
+            }
+
+            DataSource = [.. dataSourceClone];
+            OnPropertyChanged(nameof(DataSource));
+        }
+        private ObservableCollection<DepNodeView> FilterTreByStatuseCycle(ObservableCollection<DepNodeView> dep, params DepStateType[] status)
+        {
+            foreach (var item in dep)
+                item.Dependencies = FilterTreByStatuseCycle(item.Dependencies, status);
+            return new(dep.Where(x => status.Contains(x.State) || x.Dependencies.Any()));
         }
     }
 }

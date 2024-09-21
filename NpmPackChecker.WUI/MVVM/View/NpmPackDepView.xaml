@@ -16,7 +16,7 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="150"></RowDefinition>
-            <RowDefinition></RowDefinition> 
+            <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" ColumnSpacing="10">
@@ -72,13 +72,15 @@
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
 
                     <AutoSuggestBox 
-                Header="Поиск"
-                PlaceholderText="Поиск"
-                QueryIcon="Accept"
-                Width="250" 
-                TextChanged="DepsSearchTextChanged"
-                SuggestionChosen="DepsSearchSuggestionChosen">
+                        Header="Поиск"
+                        PlaceholderText="Поиск"
+                        QueryIcon="Accept"
+                        Width="250" 
+                        TextChanged="DepsSearchTextChanged"
+                        SuggestionChosen="DepsSearchSuggestionChosen">
                     </AutoSuggestBox>
+
+                    <Button Content="Ошбки" Command="{x:Bind ViewModel.OnFilterByError}"></Button>
 
                 </StackPanel>
 

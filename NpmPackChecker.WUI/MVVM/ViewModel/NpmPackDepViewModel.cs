@@ -88,14 +88,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _infoBarService = infoBarService;
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
-
-            //PacName = "@angular/cli";
-            //PacVersion = "12.1.4";
-            //PacName = "bl";
-            //PacVersion = "4.1.0";
-            //PacName = "make-fetch-happen";
-            //PacVersion = "9.1.0";
-
+              
             //PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             //PacNameVersion = "make-fetch-happen@9.1.0";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";

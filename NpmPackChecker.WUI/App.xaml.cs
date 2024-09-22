@@ -16,6 +16,12 @@ namespace NpmPackChecker.WUI
 
         private UIElement? _shell { get; set; }
 
+#if IS_NONE_PACKAGE
+        public static bool IsNonePackage { get => true; }
+#else
+        public static bool IsNonePackage { get => false; }
+#endif
+
         public static T GetService<T>() where T : class
         {
             if (App.Host.Services.GetService(typeof(T)) is not T service)

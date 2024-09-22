@@ -22,6 +22,11 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
 
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(WindowsPackageType)' == 'None'">
+    <DefineConstants>IS_NONE_PACKAGE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="Assets\SplashScreen.scale-100.png" />
     <Content Remove="Assets\SplashScreen.scale-400.png" />

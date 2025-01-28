@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
+using System; 
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -129,7 +128,7 @@ public class DepNodeView : ObservableObject
                 DataPackage dataPackage = new();
                 dataPackage.RequestedOperation = DataPackageOperation.Copy;
                 dataPackage.SetText($"{Title}@{TrueVersion} {TrueVersionDate:yyyy-MM-dd}");
-                Clipboard.SetContent(dataPackage); ;
+                Clipboard.SetContent(dataPackage); 
             });
     }
 

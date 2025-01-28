@@ -9,8 +9,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage.Pickers;
 
 namespace NpmPackChecker.WUI.MVVM.ViewModel
@@ -42,6 +44,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         public RelayCommand OnLoadPackage { get; set; }
         public RelayCommand OnAnalyze { get; set; }
+
+        public RelayCommand OnCopyAll { get; set; }
 
         public RelayCommand OnSave { get; set; }
         public RelayCommand OnRemove { get; set; }
@@ -168,6 +172,19 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 },
                 () => !string.IsNullOrEmpty(PacNameVersion.Trim()));
 
+            OnCopyAll = new RelayCommand(() =>
+            {
+                var saved = new List<string>();
+                StringBuilder sb = new();
+                foreach (var item in DataSource)
+                    GetStr(item, sb, saved);
+
+                DataPackage dataPackage = new();
+                dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                dataPackage.SetText(sb.ToString());
+                Clipboard.SetContent(dataPackage);
+            });
+
             OnSave = new RelayCommand(async () =>
                 {
                     //if (DepNodeView == null) return;
@@ -208,6 +225,20 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             //    if (saved != null)
             //        SavedChecks = new(saved);
             //});
+        }
+
+        private void GetStr(DepNodeView item, StringBuilder sb, List<string> saved)
+        {
+            var key = $"{item.Title}@{item.TrueVersion}";
+            if (item.State != DepStateType.Founded && saved.Find(x => x == key) == null)
+            {
+                var str = $"{item.Title}@{item.TrueVersion} {item.TrueVersionDate:yyyy-MM-dd}";
+                sb.AppendLine(str);
+                saved.Add(key);
+            }
+
+            foreach (var item2 in item.Dependencies)
+                GetStr(item2, sb, saved);
         }
 
         private async Task ViewDeps(string[] arr)

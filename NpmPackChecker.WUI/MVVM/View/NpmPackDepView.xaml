@@ -49,6 +49,8 @@
 
                     <Button Content="Проверить" Command="{x:Bind ViewModel.OnAnalyze}"></Button>
 
+                    <Button Content="Все" Command="{x:Bind ViewModel.OnCopyAll}"></Button>
+
                     <!--<ComboBox 
                 Header="Проверки"  
                 ItemsSource="{x:Bind ViewModel.SavedChecks}" 
@@ -67,7 +69,7 @@
 
                     <Button Content="Удалить" IsEnabled="False" Command="{x:Bind ViewModel.OnRemove}"></Button>
 
-                    <TextBox Text="{x:Bind ViewModel.RegistryUrl, Mode=TwoWay}" Width="160"/>
+                    <TextBox Text="{x:Bind ViewModel.RegistryUrl, Mode=TwoWay}" Width="300"/>
 
                 </StackPanel>
 
@@ -126,7 +128,7 @@
                             AllowDrop="False"
                             ItemsSource="{Binding Dependencies, Mode=TwoWay}">
 
-                                <StackPanel Orientation="Horizontal" >
+                                <StackPanel Orientation="Horizontal">
 
                                     <StackPanel.ContextFlyout>
                                         <MenuFlyout>

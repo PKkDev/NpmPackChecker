@@ -179,6 +179,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 foreach (var item in DataSource)
                     GetStr(item, sb, saved);
 
+                var s = sb.ToString();
                 DataPackage dataPackage = new();
                 dataPackage.RequestedOperation = DataPackageOperation.Copy;
                 dataPackage.SetText(sb.ToString());

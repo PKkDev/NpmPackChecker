@@ -307,6 +307,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 else
                 {
                     DepNodeView.State = DepStateType.Error;
+                    DepNodeView.ErrorText = "Искомая версия не найдена";
                     DepNodeCounterView.TotalError++;
                     OnPropertyChanged(nameof(DepNodeCounterView));
                     _infoBarService.Show($"Версия '{item.DepVersion}' не найдена");
@@ -376,6 +377,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     else
                     {
                         chDep.State = DepStateType.Error;
+                        chDep.ErrorText = "Искомая версия не найдена";
                         DepNodeCounterView.TotalError++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
                     }
@@ -383,6 +385,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 else
                 {
                     chDep.State = DepStateType.Error;
+                    chDep.ErrorText = "Инфрмация о пакете не найдена";
                     DepNodeCounterView.TotalError++;
                     OnPropertyChanged(nameof(DepNodeCounterView));
                     _infoBarService.Show($"Пакет '{pack}' не найден");
@@ -490,6 +493,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             catch (Exception)
             {
                 root.SetState(DepStateType.Error);
+                root.ErrorText = "При проврки наличия пакета в репозитории инфрмация не найдена";
                 DepNodeCounterView.TotalError++;
                 OnPropertyChanged(nameof(DepNodeCounterView));
             }

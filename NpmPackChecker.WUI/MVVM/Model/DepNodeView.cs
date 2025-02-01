@@ -17,6 +17,9 @@ public class DepNodeView : ObservableObject
     public DateTime TrueVersionDate { get; set; }
     public string TarballUrl { get; set; }
 
+
+    public string ErrorText { get; set; }
+
     //public DepNodeView? Parent { get; set; }
     public ObservableCollection<DepNodeView> Dependencies { get; set; }
 
@@ -46,8 +49,8 @@ public class DepNodeView : ObservableObject
             if (State == DepStateType.NotFounded)
                 return "Пакет не надйен в репозитории";
 
-            if (State == DepStateType.Founded)
-                return "Произошла ошибка при проверки пакета";
+            if (State == DepStateType.Error)
+                return $"Произошла ошибка при проверки пакета ({ErrorText})";
 
             return ViewTitle;
         }

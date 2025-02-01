@@ -4,6 +4,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Windows.Input;
 using Windows.ApplicationModel.DataTransfer;
 
@@ -31,6 +32,7 @@ public class DepNodeView : ObservableObject
     public DepStateType State { get; set; }
 
     [NotMapped]
+    [JsonIgnore]
     public ICommand CopyTxtCmd { get; set; }
 
     public string ToolTip
@@ -94,7 +96,7 @@ public class DepNodeView : ObservableObject
                 DepStateType.Pending => "В процессе",
                 DepStateType.Founded => "Найден",
                 DepStateType.NotFounded => "Не найден",
-                DepStateType.Error => "Ошибка",
+                DepStateType.Error => $"Ошибка ({ErrorText})",
                 _ => "NONE",
             };
         }
@@ -117,6 +119,9 @@ public class DepNodeView : ObservableObject
         this.State = State;
         OnPropertyChanged(nameof(StateIcon));
         OnPropertyChanged(nameof(StateIconColor));
+        OnPropertyChanged(nameof(StateIconToolTip));
+        OnPropertyChanged(nameof(ToolTip));
+        OnPropertyChanged(nameof(ErrorText));
     }
 
     public DepNodeView()

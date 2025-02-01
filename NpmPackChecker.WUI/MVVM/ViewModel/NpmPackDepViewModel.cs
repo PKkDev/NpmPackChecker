@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 
 namespace NpmPackChecker.WUI.MVVM.ViewModel
@@ -42,47 +43,16 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             }
         }
 
-        public RelayCommand OnLoadPackage { get; set; }
+        public RelayCommand OnOpenPackageJson { get; set; }
         public RelayCommand OnAnalyze { get; set; }
-
-        public RelayCommand OnCopyAll { get; set; }
-
+        public RelayCommand OnCopyAllNotFounded { get; set; }
         public RelayCommand OnSave { get; set; }
-        public RelayCommand OnRemove { get; set; }
-
+        public RelayCommand OnOpen { get; set; }
         public RelayCommand OnFilterByError { get; set; }
 
-        //public DepNodeView DepNodeView { get; set; }
         public ObservableCollection<DepNodeView> DataSource { get; set; }
         private List<DepNodeView> DataSourceOrig { get; set; }
         public List<string> TotalDeps;
-
-        //public ObservableCollection<SavedNpmChecks> SavedChecks { get; set; }
-        //private SavedNpmChecks _selectedSavedChecks;
-        //public SavedNpmChecks SelectedSavedChecks
-        //{
-        //    get { return _selectedSavedChecks; }
-        //    set
-        //    {
-        //        SetProperty(ref _selectedSavedChecks, value);
-        //        if (DataSource.Count > 0) DataSource.RemoveAt(0);
-        //        if (SelectedSavedChecks != null)
-        //        {
-        //            PacName = SelectedSavedChecks.Package;
-        //            PacVersion = SelectedSavedChecks.Version;
-
-        //            DataSource.Add(SelectedSavedChecks.DepNodeView);
-        //            DepNodeView = SelectedSavedChecks.DepNodeView;
-        //            DepNodeCounterView = new(SelectedSavedChecks.DepNodeView);
-        //        }
-        //        else
-        //        {
-        //            DepNodeCounterView = new();
-        //        }
-        //        OnPropertyChanged(nameof(DepNodeCounterView));
-        //        OnRemove.NotifyCanExecuteChanged();
-        //    }
-        //}
 
         public DepNodeCounterView DepNodeCounterView { get; set; }
 
@@ -93,21 +63,22 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
 
-            RegistryUrl = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
-            //RegistryUrl = "https://registry.npmjs.org/";
+            //RegistryUrl = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
+            RegistryUrl = "https://registry.npmjs.org/";
 
             _npmRegService.SetRegistryUrl(RegistryUrl);
 
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
             PacNameVersion = "@isaacs/cliui@8.0.2";
+            PacNameVersion = "make-fetch-happen@9.1.0";
 
             DataSource = new();
             TotalDeps = new();
 
             //SavedChecks = new();
 
-            OnLoadPackage = new RelayCommand(async () =>
+            OnOpenPackageJson = new RelayCommand(async () =>
             {
                 var openPicker = new FileOpenPicker();
                 var window = App.MainWindow;
@@ -169,66 +140,95 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                     _dispatcherQueue.TryEnqueue(() => IsLoading = false);
                     await StartCheckDepsInRegistry();
+                    DataSourceOrig = new(DataSource);
+
+                    OnSave.NotifyCanExecuteChanged();
+                    OnOpen.NotifyCanExecuteChanged();
+                    OnCopyAllNotFounded.NotifyCanExecuteChanged();
                 },
                 () => !string.IsNullOrEmpty(PacNameVersion.Trim()));
 
-            OnCopyAll = new RelayCommand(() =>
-            {
-                var saved = new List<string>();
-                StringBuilder sb = new();
-                foreach (var item in DataSource)
-                    GetStr(item, sb, saved);
-
-                var s = sb.ToString();
-                DataPackage dataPackage = new();
-                dataPackage.RequestedOperation = DataPackageOperation.Copy;
-                dataPackage.SetText(sb.ToString());
-                Clipboard.SetContent(dataPackage);
-            });
-
-            OnSave = new RelayCommand(async () =>
+            OnCopyAllNotFounded = new RelayCommand(
+                () =>
                 {
-                    //if (DepNodeView == null) return;
+                    var saved = new List<string>();
+                    StringBuilder sb = new();
+                    foreach (var item in DataSource)
+                        GetAllErrorPackagesStr(item, sb, saved);
 
-                    //var savedNpmChecks = new SavedNpmChecks(DepNodeView);
+                    var s = sb.ToString();
+                    DataPackage dataPackage = new();
+                    dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                    dataPackage.SetText(sb.ToString());
+                    Clipboard.SetContent(dataPackage);
+                },
+                () => DataSource.Any());
 
-                    //var check = SavedChecks.FirstOrDefault(x => x.ViewTitle == savedNpmChecks.ViewTitle);
-                    //if (check != null)
-                    //    SavedChecks.Remove(check);
-
-                    //SavedChecks.Add(savedNpmChecks);
-                    //await dataStorage.SetByKey(SavedChecks, nameof(SavedNpmChecks), true);
-                }); // () => DepNodeView != null)
-
-            OnRemove = new RelayCommand(async () =>
+            OnSave = new RelayCommand(
+                async () =>
                 {
-                    //var find = SavedChecks
-                    //    .FirstOrDefault(x =>
-                    //        x.Package == SelectedSavedChecks.Package
-                    //        && x.Version == SelectedSavedChecks.Version
-                    //        && x.Date == SelectedSavedChecks.Date);
-                    //SavedChecks.Remove(find);
-                    //await dataStorage.SetByKey(SavedChecks, nameof(SavedNpmChecks), true);
-                    //SelectedSavedChecks = null;
+                    if (!DataSource.Any()) return;
 
-                    //OnSave.NotifyCanExecuteChanged();
-                    //OnRemove.NotifyCanExecuteChanged();
-                }); // () => SelectedSavedChecks != null
+                    FileSavePicker savePicker = new FileSavePicker();
+                    var window = App.MainWindow;
+                    var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                    WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
+
+                    savePicker.SuggestedStartLocation = PickerLocationId.Desktop;
+                    savePicker.FileTypeChoices.Add("JSON", new List<string>() { ".json" });
+                    var date = DateTime.Today.ToString("dd-MM-yyyy");
+                    var fileName = DataSource.Count > 1
+                        ? $"packajejson_{date}"
+                        : $"{DataSource.First().Title.Replace(' ', '_')}_{date}";
+                    savePicker.SuggestedFileName = fileName;
+
+                    StorageFile file = await savePicker.PickSaveFileAsync();
+                    if (file != null)
+                    {
+                        var txt = JsonSerializer.Serialize(DataSource);
+                        await File.WriteAllTextAsync(file.Path, txt);
+                    }
+                },
+                () => DataSource.Any());
+
+            OnOpen = new RelayCommand(
+                async () =>
+                {
+                    var openPicker = new FileOpenPicker();
+                    var window = App.MainWindow;
+                    var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                    WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+                    openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+                    openPicker.ViewMode = PickerViewMode.Thumbnail;
+                    openPicker.FileTypeFilter.Add(".json");
+
+                    StorageFile file = await openPicker.PickSingleFileAsync();
+                    if (file != null)
+                    {
+                        var jsonString = File.ReadAllText(file.Path);
+                        var obj = JsonSerializer.Deserialize<List<DepNodeView>>(jsonString);
+                        DataSourceOrig = obj;
+
+                        DataSource = new();
+                        foreach (var item in obj)
+                            DataSource.Add(item);
+                        OnPropertyChanged(nameof(DataSource));
+
+                        OnSave.NotifyCanExecuteChanged();
+                        OnOpen.NotifyCanExecuteChanged();
+                        OnCopyAllNotFounded.NotifyCanExecuteChanged();
+                    }
+                },
+                () => !IsLoading);
 
             OnFilterByError = new RelayCommand(() =>
             {
                 FilterTreeByStatus(DepStateType.Error | DepStateType.NotFounded);
             });
-
-            //Task.Run(() =>
-            //{
-            //    var saved = dataStorage.GetByKey<List<SavedNpmChecks>>(nameof(SavedNpmChecks));
-            //    if (saved != null)
-            //        SavedChecks = new(saved);
-            //});
         }
 
-        private void GetStr(DepNodeView item, StringBuilder sb, List<string> saved)
+        private void GetAllErrorPackagesStr(DepNodeView item, StringBuilder sb, List<string> saved)
         {
             var key = $"{item.Title}@{item.TrueVersion}";
             if (item.State != DepStateType.Founded && saved.Find(x => x == key) == null)
@@ -239,7 +239,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             }
 
             foreach (var item2 in item.Dependencies)
-                GetStr(item2, sb, saved);
+                GetAllErrorPackagesStr(item2, sb, saved);
         }
 
         private async Task ViewDeps(string[] arr)
@@ -466,34 +466,34 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             foreach (var item in DataSource)
                 await CheckDepsInRegistry(item);
         }
-        private async Task CheckDepsInRegistry(DepNodeView root)
+        private async Task CheckDepsInRegistry(DepNodeView item)
         {
             try
             {
-                if (root.State != DepStateType.Error && root.State != DepStateType.NotFounded)
+                if (item.State != DepStateType.Error && item.State != DepStateType.NotFounded)
                 {
-                    var check = await _npmRegService.CheckPackage(root.TarballUrl);
+                    var check = await _npmRegService.CheckPackage(item.TarballUrl);
                     if (check)
                     {
-                        root.SetState(DepStateType.Founded);
+                        item.SetState(DepStateType.Founded);
                         DepNodeCounterView.TotalFounded++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
                     }
                     else
                     {
-                        root.SetState(DepStateType.NotFounded);
+                        item.SetState(DepStateType.NotFounded);
                         DepNodeCounterView.TotalNotFound++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
                     }
                 }
 
-                foreach (var item in root.Dependencies)
-                    await CheckDepsInRegistry(item);
+                foreach (var itemDep in item.Dependencies)
+                    await CheckDepsInRegistry(itemDep);
             }
             catch (Exception)
             {
-                root.SetState(DepStateType.Error);
-                root.ErrorText = "При проврки наличия пакета в репозитории инфрмация не найдена";
+                item.SetState(DepStateType.Error);
+                item.ErrorText = "При проврки наличия пакета в репозитории инфрмация не найдена";
                 DepNodeCounterView.TotalError++;
                 OnPropertyChanged(nameof(DepNodeCounterView));
             }

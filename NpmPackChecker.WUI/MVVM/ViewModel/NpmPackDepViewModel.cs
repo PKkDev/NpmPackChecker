@@ -63,8 +63,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             _npmRegService = npmRegService;
             //_dataStorage = dataStorage;
 
-            //RegistryUrl = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
-            RegistryUrl = "https://registry.npmjs.org/";
+            RegistryUrl = "http://proxyp.dmzp.local/dmzart1/repository/npmjs/";
+            //RegistryUrl = "https://registry.npmjs.org/";
 
             _npmRegService.SetRegistryUrl(RegistryUrl);
 

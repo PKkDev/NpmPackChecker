@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Documents;
 using NpmPackChecker.WUI.Dto;
 using NpmPackChecker.WUI.MVVM.Model;
 using NpmPackChecker.WUI.Services;
@@ -56,6 +58,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         public DepNodeCounterView DepNodeCounterView { get; set; }
 
+        private RichTextBlock RichTextBlockDepToImport;
+
         public NpmPackDepViewModel(
              InfoBarService infoBarService, NpmRegService npmRegService) // DataStorageService dataStorage,
         {
@@ -72,7 +76,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
             PacNameVersion = "@isaacs/cliui@8.0.2";
             PacNameVersion = "nx@13.8.1";
-            PacNameVersion = "make-fetch-happen@9.1.0";
+            //PacNameVersion = "make-fetch-happen@9.1.0";
 
             DataSource = new();
             //TotalDeps = new();
@@ -137,11 +141,13 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             OnAnalyze = new RelayCommand(
                 async () =>
                 {
+                    _dispatcherQueue.TryEnqueue(() => RichTextBlockDepToImport.Blocks.Clear());
                     _dispatcherQueue.TryEnqueue(() => IsLoading = true);
                     await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
-                    _dispatcherQueue.TryEnqueue(() => IsLoading = false);
                     await StartCheckDepsInRegistry();
                     DataSourceOrig = new(DataSource);
+                    StartFeedRichTextBlockDepToImport();
+                    _dispatcherQueue.TryEnqueue(() => IsLoading = false);
 
                     OnSave.NotifyCanExecuteChanged();
                     OnOpen.NotifyCanExecuteChanged();
@@ -229,6 +235,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             });
         }
 
+        public void Init(RichTextBlock richTextBlockDepToImport)
+        {
+            RichTextBlockDepToImport = richTextBlockDepToImport;
+        }
+
         private void GetAllErrorPackagesStr(DepNodeView item, StringBuilder sb, List<string> saved)
         {
             var key = $"{item.Title}@{item.TrueVersion}";
@@ -280,8 +291,6 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     item.DepVersion, packInfo.Versions, packInfo.DistTags,
                     out var needVersion);
 
-                alreadyChecked.Add(depNodeView.ViewTitle);
-
                 //if (!TotalDeps.Any(x => x == DepNodeView.Title))
                 //    TotalDeps.Add(DepNodeView.Title);
 
@@ -297,6 +306,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                     DataSource.Add(depNodeView);
 
+                    alreadyChecked.Add(depNodeView.ViewTitle);
                     await LoadDependencies(depNodeView, needVersion.Dependencies, alreadyChecked);
                 }
                 else
@@ -363,13 +373,20 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
                         root.Dependencies.Add(chDep);
 
-                        if (needVersion.Dependencies != null)
+                        var isAlreadyChecked = alreadyChecked.FirstOrDefault(x => x == chDep.ViewTitle) != null;
+                        if (!isAlreadyChecked)
                         {
-                            if (alreadyChecked.FirstOrDefault(x => x == chDep.ViewTitle) == null)
-                                await LoadDependencies(chDep, needVersion.Dependencies, alreadyChecked);
-
                             alreadyChecked.Add(chDep.ViewTitle);
+                            await LoadDependencies(chDep, needVersion.Dependencies, alreadyChecked);
                         }
+
+                        //if (needVersion.Dependencies != null)
+                        //{
+                        //    if (alreadyChecked.FirstOrDefault(x => x == chDep.ViewTitle) == null)
+                        //        await LoadDependencies(chDep, needVersion.Dependencies, alreadyChecked);
+
+                        //    alreadyChecked.Add(chDep.ViewTitle);
+                        //}
 
                         //if (!TotalDeps.Any(x => x == chDep.Title))
                         //    TotalDeps.Add(chDep.Title);
@@ -491,7 +508,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     else
                     {
                         item.SetState(DepStateType.NotFounded);
-                        DepNodeCounterView.TotalNotFound++;
+                        //DepNodeCounterView.TotalNotFound++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
                     }
                 }
@@ -506,6 +523,35 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 DepNodeCounterView.TotalError++;
                 OnPropertyChanged(nameof(DepNodeCounterView));
             }
+        }
+
+        private void StartFeedRichTextBlockDepToImport()
+        {
+            if (DataSource == null) return;
+            List<string> visited = new();
+            foreach (var item in DataSource)
+                StartFeedRichTextBlockDepToImportReq(item, visited);
+
+        }
+        private void StartFeedRichTextBlockDepToImportReq(DepNodeView item, List<string> visited)
+        {
+            if (item.State == DepStateType.NotFounded)
+            {
+                var text = $"{item.Title}@{item.TrueVersion} {item.TrueVersionDate:yyyy-MM-dd}";
+                if (!visited.Contains(text))
+                {
+                    DepNodeCounterView.TotalNotFound++;
+                    OnPropertyChanged(nameof(DepNodeCounterView));
+                    visited.Add(text);
+
+                    Paragraph para = new();
+                    para.Inlines.Add(new Run { Text = text, FontSize = 15 });
+                    _dispatcherQueue.TryEnqueue(() => RichTextBlockDepToImport.Blocks.Add(para));
+                }
+            }
+
+            foreach (var itemDep in item.Dependencies)
+                StartFeedRichTextBlockDepToImportReq(itemDep, visited);
         }
 
         #region Filters

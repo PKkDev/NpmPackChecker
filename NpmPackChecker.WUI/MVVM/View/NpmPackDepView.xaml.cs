@@ -14,6 +14,7 @@ namespace NpmPackChecker.WUI.MVVM.View
         {
             InitializeComponent();
             DataContext = ViewModel = App.GetService<NpmPackDepViewModel>();
+            ViewModel.Init(RichTextBlockDepToImport);
         }
 
         private void DepsSearchTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

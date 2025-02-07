@@ -27,8 +27,8 @@ namespace NpmPackChecker.WUI.MVVM.View
                     ViewModel.FilterTree("");
                 }
 
-                var res = ViewModel.TotalDeps.Where(x => x.Contains(text, StringComparison.CurrentCultureIgnoreCase));
-                sender.ItemsSource = res;
+                //var res = ViewModel.TotalDeps.Where(x => x.Contains(text, StringComparison.CurrentCultureIgnoreCase));
+                //sender.ItemsSource = res;
             }
         }
 

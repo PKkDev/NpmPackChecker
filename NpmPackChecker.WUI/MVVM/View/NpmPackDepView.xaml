@@ -62,6 +62,8 @@
 
                     <Button Content="Все не найденные" Command="{x:Bind ViewModel.OnCopyAllNotFounded}"/>
 
+                    <Button Content="Ошбки" IsEnabled="False" Command="{x:Bind ViewModel.OnFilterByError}"/>
+
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -75,13 +77,7 @@
                         SuggestionChosen="DepsSearchSuggestionChosen"
                         IsEnabled="False"/>
 
-                    <Button Content="Ошбки" IsEnabled="False" Command="{x:Bind ViewModel.OnFilterByError}"/>
-
-                </StackPanel>
-
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
-
-                    <TextBlock Text="{x:Bind ViewModel.DepNodeCounterView.ViewTitle, Mode=OneWay}"/>
+                    <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.DepNodeCounterView.ViewTitle, Mode=OneWay}"/>
 
                 </StackPanel>
 
@@ -120,10 +116,10 @@
                     <TreeView.ItemTemplate>
                         <DataTemplate>
                             <TreeViewItem 
-                            IsExpanded="True"
-                            CanDrag="False"
-                            AllowDrop="False"
-                            ItemsSource="{Binding Dependencies, Mode=TwoWay}">
+                                IsExpanded="True"
+                                CanDrag="False"
+                                AllowDrop="False"
+                                ItemsSource="{Binding Dependencies, Mode=TwoWay}">
 
                                 <StackPanel Orientation="Horizontal">
 
@@ -134,19 +130,19 @@
                                     </StackPanel.ContextFlyout>
 
                                     <TextBlock 
-                                    FontSize="14"
-                                    VerticalAlignment="Center"
-                                    Text="{Binding ViewTitle}" 
-                                    Foreground="{Binding TextForeground, Mode=TwoWay}"
-                                    ToolTipService.ToolTip="{Binding ToolTip, Mode=TwoWay}"/>
+                                        FontSize="14"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding ViewTitle}" 
+                                        Foreground="{Binding TextForeground, Mode=TwoWay}"
+                                        ToolTipService.ToolTip="{Binding ToolTip, Mode=TwoWay}"/>
 
                                     <Button Padding="0" Margin="10,0,0,0">
 
                                         <FontIcon 
-                                        FontFamily="Segoe MDL2 Assets" 
-                                        Glyph="{Binding StateIcon, Mode=TwoWay}"
-                                        Foreground="{Binding StateIconColor, Mode=TwoWay}"
-                                        ToolTipService.ToolTip="{Binding StateIconToolTip, Mode=TwoWay}">
+                                            FontFamily="Segoe MDL2 Assets" 
+                                            Glyph="{Binding StateIcon, Mode=TwoWay}"
+                                            Foreground="{Binding StateIconColor, Mode=TwoWay}"
+                                            ToolTipService.ToolTip="{Binding StateIconToolTip, Mode=TwoWay}">
                                         </FontIcon>
 
                                     </Button>

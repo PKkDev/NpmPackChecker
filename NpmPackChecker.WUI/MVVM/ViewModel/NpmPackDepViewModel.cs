@@ -52,7 +52,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
 
         public ObservableCollection<DepNodeView> DataSource { get; set; }
         private List<DepNodeView> DataSourceOrig { get; set; }
-        public List<string> TotalDeps;
+        //public List<string> TotalDeps;
 
         public DepNodeCounterView DepNodeCounterView { get; set; }
 
@@ -71,10 +71,11 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0\r@angular/cli@12.1.4";
             PacNameVersion = "make-fetch-happen@9.1.0\rbl@4.1.0";
             PacNameVersion = "@isaacs/cliui@8.0.2";
+            PacNameVersion = "nx@13.8.1";
             PacNameVersion = "make-fetch-happen@9.1.0";
 
             DataSource = new();
-            TotalDeps = new();
+            //TotalDeps = new();
 
             //SavedChecks = new();
 
@@ -259,21 +260,15 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             DataSource = new();
             OnPropertyChanged(nameof(DataSource));
 
-            TotalDeps = new();
+            //TotalDeps = new();
 
             foreach (var item in depsToCheck)
             {
                 List<string> alreadyChecked = new();
 
-                var DepNodeView = new DepNodeView(item.Title, item.DepVersion);
+                var depNodeView = new DepNodeView(item.Title, item.DepVersion);
 
-                var packInfo = await _npmRegService.GetPackInfoBase(item.Title);
-                if (packInfo == null)
-                {
-                    packInfo = await _npmRegService.GetPackInfoBase(item.Title, NpmChekType.Default);
-                    DepNodeView.FromDefault = true;
-                    DepNodeView.State = DepStateType.NotFounded;
-                }
+                var packInfo = await GetPackInfoBase(item.Title, depNodeView);
 
                 if (packInfo == null)
                 {
@@ -285,29 +280,29 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     item.DepVersion, packInfo.Versions, packInfo.DistTags,
                     out var needVersion);
 
-                alreadyChecked.Add(DepNodeView.ViewTitle);
+                alreadyChecked.Add(depNodeView.ViewTitle);
 
-                if (!TotalDeps.Any(x => x == DepNodeView.Title))
-                    TotalDeps.Add(DepNodeView.Title);
+                //if (!TotalDeps.Any(x => x == DepNodeView.Title))
+                //    TotalDeps.Add(DepNodeView.Title);
 
                 if (isVersionFounded)
                 {
-                    DepNodeView.TrueVersion = needVersion.Version;
+                    depNodeView.TrueVersion = needVersion.Version;
                     packInfo.Time.TryGetValue(needVersion.Version, out var trueVersionDate);
-                    DepNodeView.TrueVersionDate = trueVersionDate;
-                    DepNodeView.TarballUrl = needVersion.Dist.Tarball;
+                    depNodeView.TrueVersionDate = trueVersionDate;
+                    depNodeView.TarballUrl = needVersion.Dist.Tarball;
 
                     DepNodeCounterView.TotalDeps++;
                     OnPropertyChanged(nameof(DepNodeCounterView));
 
-                    DataSource.Add(DepNodeView);
+                    DataSource.Add(depNodeView);
 
-                    await LoadDeps(DepNodeView, needVersion.Dependencies, alreadyChecked);
+                    await LoadDependencies(depNodeView, needVersion.Dependencies, alreadyChecked);
                 }
                 else
                 {
-                    DepNodeView.State = DepStateType.Error;
-                    DepNodeView.ErrorText = "Искомая версия не найдена";
+                    depNodeView.State = DepStateType.Error;
+                    depNodeView.ErrorText = "Искомая версия не найдена";
                     DepNodeCounterView.TotalError++;
                     OnPropertyChanged(nameof(DepNodeCounterView));
                     _infoBarService.Show($"Версия '{item.DepVersion}' не найдена");
@@ -317,7 +312,7 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 OnSave.NotifyCanExecuteChanged();
             }
         }
-        private async Task LoadDeps(
+        private async Task LoadDependencies(
             DepNodeView root, Dictionary<string, string> dependencies, List<string> alreadyChecked)
         {
             foreach (var item in dependencies)
@@ -329,25 +324,28 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 if (pack.Contains("-cjs") && version.StartsWith("npm:") && version.Contains("@"))
                 {
                     var index1 = version.LastIndexOf('@');
-                    var pack1 = version.Substring(4, index1 - 4);
-                    var version1 = version[(index1 + 1)..];
+                    var packNew = version.Substring(4, index1 - 4);
+                    var versionNew = version[(index1 + 1)..];
 
-                    pack = pack1;
-                    version = version1;
+                    pack = packNew;
+                    version = versionNew;
                 }
 
                 var chDep = new DepNodeView(pack, version, root);
 
-                var packInfo = await _npmRegService.GetPackInfoBase(pack);
+                var packInfo = await GetPackInfoBase(pack, chDep);
 
                 if (packInfo == null)
                 {
-                    packInfo = await _npmRegService.GetPackInfoBase(pack, NpmChekType.Default);
-                    chDep.FromDefault = true;
-                    chDep.State = DepStateType.NotFounded;
-                }
+                    chDep.State = DepStateType.Error;
+                    chDep.ErrorText = "Инфрмация о пакете не найдена";
+                    DepNodeCounterView.TotalError++;
+                    OnPropertyChanged(nameof(DepNodeCounterView));
+                    _infoBarService.Show($"Пакет '{pack}' не найден");
 
-                if (packInfo != null)
+                    root.Dependencies.Add(chDep);
+                }
+                else
                 {
                     var isVersionFounded = GetAndCheckVersion(
                         version, packInfo.Versions, packInfo.DistTags,
@@ -363,16 +361,18 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         DepNodeCounterView.TotalDeps++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
 
+                        root.Dependencies.Add(chDep);
+
                         if (needVersion.Dependencies != null)
                         {
                             if (alreadyChecked.FirstOrDefault(x => x == chDep.ViewTitle) == null)
-                                await LoadDeps(chDep, needVersion.Dependencies, alreadyChecked);
+                                await LoadDependencies(chDep, needVersion.Dependencies, alreadyChecked);
 
                             alreadyChecked.Add(chDep.ViewTitle);
                         }
 
-                        if (!TotalDeps.Any(x => x == chDep.Title))
-                            TotalDeps.Add(chDep.Title);
+                        //if (!TotalDeps.Any(x => x == chDep.Title))
+                        //    TotalDeps.Add(chDep.Title);
                     }
                     else
                     {
@@ -380,18 +380,12 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         chDep.ErrorText = "Искомая версия не найдена";
                         DepNodeCounterView.TotalError++;
                         OnPropertyChanged(nameof(DepNodeCounterView));
+
+                        root.Dependencies.Add(chDep);
                     }
                 }
-                else
-                {
-                    chDep.State = DepStateType.Error;
-                    chDep.ErrorText = "Инфрмация о пакете не найдена";
-                    DepNodeCounterView.TotalError++;
-                    OnPropertyChanged(nameof(DepNodeCounterView));
-                    _infoBarService.Show($"Пакет '{pack}' не найден");
-                }
 
-                root.Dependencies.Add(chDep);
+                //root.Dependencies.Add(chDep);
 
                 //OnPropertyChanged(nameof(DepNodeView));
                 //OnPropertyChanged(nameof(DataSource));
@@ -399,6 +393,21 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 //DataSource.RemoveAt(0);
                 //DataSource.Add(DepNodeView);
             }
+        }
+
+
+        private async Task<PackDetailDto> GetPackInfoBase(string pack, DepNodeView chDep)
+        {
+            var packInfo = await _npmRegService.GetPackInfoBase(pack);
+
+            if (packInfo == null)
+            {
+                packInfo = await _npmRegService.GetPackInfoBase(pack, NpmChekType.Default);
+                chDep.FromDefault = true;
+                chDep.State = DepStateType.NotFounded;
+            }
+
+            return packInfo;
         }
 
         private bool GetAndCheckVersion(

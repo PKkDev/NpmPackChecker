@@ -10,7 +10,7 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace NpmPackChecker.WUI.MVVM.Model;
 
-public class DepNodeView : ObservableObject
+public partial class DepNodeView : ObservableObject
 {
     public string Title { get; set; }
     public string DepVersion { get; set; }

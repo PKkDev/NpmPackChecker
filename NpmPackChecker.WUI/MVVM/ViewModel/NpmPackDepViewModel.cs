@@ -217,14 +217,16 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         var obj = JsonSerializer.Deserialize<List<DepNodeView>>(jsonString);
                         DataSourceOrig = obj;
 
-                        DataSource = new();
-                        foreach (var item in obj)
-                            DataSource.Add(item);
+                        DataSource = [.. obj];
                         OnPropertyChanged(nameof(DataSource));
 
                         OnSave.NotifyCanExecuteChanged();
                         OnOpen.NotifyCanExecuteChanged();
                         OnCopyAllNotFounded.NotifyCanExecuteChanged();
+
+                        DepNodeCounterView = new();
+                        OnPropertyChanged(nameof(DepNodeCounterView));
+                        StartFeedRichTextBlockDepToImport();
                     }
                 },
                 () => !IsLoading);

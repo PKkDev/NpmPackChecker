@@ -157,23 +157,7 @@
             </ScrollView>
 
             <ScrollView Grid.Column="1" Grid.Row="0">
-                <RichTextBlock x:Name="RichTextBlockDepToImport">
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
-                    <Paragraph>I am a RichTextBlock.</Paragraph>
+                <RichTextBlock x:Name="RichTextBlockDepToImport"> 
                 </RichTextBlock>
             </ScrollView>
 

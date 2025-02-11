@@ -4,6 +4,30 @@ using System.Text.Json.Serialization;
 
 namespace NpmPackChecker.WUI.Dto;
 
+public class PackDetailResult
+{
+    public PackDetailDto Data { get; set; }
+    public string Error { get; set; }
+
+    public static PackDetailResult Success(PackDetailDto data)
+    {
+        return new PackDetailResult()
+        {
+            Data = data,
+            Error = null
+        };
+    }
+
+    public static PackDetailResult Fail(string error)
+    {
+        return new PackDetailResult()
+        {
+            Data = null,
+            Error = error
+        };
+    }
+}
+
 public class PackDetailDto
 {
     [JsonPropertyName("dist-tags")]
@@ -41,7 +65,7 @@ public class VersionDto
 
     public VersionDto()
     {
-        Dependencies = new(); 
+        Dependencies = new();
     }
 }
 

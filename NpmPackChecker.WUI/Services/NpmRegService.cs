@@ -3,6 +3,7 @@ using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NpmPackChecker.WUI.Services;
 
@@ -40,7 +41,7 @@ public class NpmRegService
         return client;
     }
 
-    public async Task<PackDetailDto?> GetPackInfoBase(string packName, NpmChekType type = NpmChekType.Current)
+    public async Task<PackDetailResult> GetPackInfoBase(string packName, NpmChekType type = NpmChekType.Current)
     {
         try
         {
@@ -54,11 +55,13 @@ public class NpmRegService
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return JsonSerializer.Deserialize<PackDetailDto>(contentStr);
+            var data = JsonSerializer.Deserialize<PackDetailDto>(contentStr);
+
+            return PackDetailResult.Success(data);
         }
         catch (Exception ex)
         {
-            return null;
+            return PackDetailResult.Fail(ex.Message);
         }
     }
 

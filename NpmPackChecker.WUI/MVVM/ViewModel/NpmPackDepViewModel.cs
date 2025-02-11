@@ -141,6 +141,8 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             OnAnalyze = new RelayCommand(
                 async () =>
                 {
+                    _npmRegService.SetRegistryUrl(RegistryUrl);
+
                     _dispatcherQueue.TryEnqueue(() => RichTextBlockDepToImport.Blocks.Clear());
                     _dispatcherQueue.TryEnqueue(() => IsLoading = true);
                     await ViewDeps(PacNameVersion.Split("\r", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
@@ -293,6 +295,15 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                     item.DepVersion, packInfo.Versions, packInfo.DistTags,
                     out var needVersion);
 
+                if (!isVersionFounded && !depNodeView.FromDefault)
+                {
+                    packInfo = await GetPackInfoBase(item.Title, depNodeView, true);
+
+                    isVersionFounded = GetAndCheckVersion(
+                        item.DepVersion, packInfo.Versions, packInfo.DistTags,
+                        out needVersion);
+                }
+
                 //if (!TotalDeps.Any(x => x == DepNodeView.Title))
                 //    TotalDeps.Add(DepNodeView.Title);
 
@@ -363,6 +374,15 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                         version, packInfo.Versions, packInfo.DistTags,
                         out var needVersion);
 
+                    if (!isVersionFounded && !chDep.FromDefault)
+                    {
+                        packInfo = await GetPackInfoBase(pack, chDep, true);
+
+                        isVersionFounded = GetAndCheckVersion(
+                          version, packInfo.Versions, packInfo.DistTags,
+                          out needVersion);
+                    }
+
                     if (isVersionFounded)
                     {
                         chDep.TrueVersion = needVersion.Version;
@@ -415,18 +435,26 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
         }
 
 
-        private async Task<PackDetailDto> GetPackInfoBase(string pack, DepNodeView chDep)
+        private async Task<PackDetailDto> GetPackInfoBase(string pack, DepNodeView chDep, bool fromDefault = false)
         {
-            var packInfo = await _npmRegService.GetPackInfoBase(pack);
-
-            if (packInfo == null)
+            if (fromDefault)
             {
-                packInfo = await _npmRegService.GetPackInfoBase(pack, NpmChekType.Default);
+                var packInfo = await _npmRegService.GetPackInfoBase(pack, NpmChekType.Default);
                 chDep.FromDefault = true;
                 chDep.State = DepStateType.NotFounded;
-            }
 
-            return packInfo;
+                return packInfo.Data;
+            }
+            else
+            {
+                var packInfo = await _npmRegService.GetPackInfoBase(pack);
+                if (packInfo.Data == null)
+                {
+                    return await GetPackInfoBase(pack, chDep, true);
+                }
+
+                return packInfo.Data;
+            }
         }
 
         private bool GetAndCheckVersion(

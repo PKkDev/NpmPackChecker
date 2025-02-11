@@ -50,6 +50,12 @@ public class DistTagsDto
 {
     [JsonPropertyName("latest")]
     public string Latest { get; set; }
+
+    [JsonPropertyName("next")]
+    public string Next { get; set; }
+
+    [JsonPropertyName("previous")]
+    public string Previous { get; set; }
 }
 
 public class VersionDto

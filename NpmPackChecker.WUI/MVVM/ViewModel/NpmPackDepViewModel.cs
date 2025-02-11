@@ -457,6 +457,14 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
             }
         }
 
+        /// <summary>
+        /// https://dev-scout.hashnode.dev/decoding-version-numbers-how-semver-helps-versioning-a-software
+        /// </summary>
+        /// <param name="searchVersion"></param>
+        /// <param name="versions"></param>
+        /// <param name="distTags"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
         private bool GetAndCheckVersion(
             string searchVersion, Dictionary<string, VersionDto> versions, DistTagsDto distTags, out VersionDto version)
         {
@@ -466,6 +474,14 @@ namespace NpmPackChecker.WUI.MVVM.ViewModel
                 {
                     version = null;
                     return false;
+                }
+
+                if (searchVersion.Equals("*"))
+                {
+                    if (distTags.Latest != null)
+                    {
+                        searchVersion = distTags.Latest;
+                    }
                 }
 
                 var mapVersion = searchVersion;
